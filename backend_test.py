@@ -424,9 +424,10 @@ def test_chat_system():
     return all(results)
 
 def test_payment_system():
-    """Test payment system"""
-    print_test_header("PAYMENT SYSTEM")
+    """Test VNPay payment system with QR code generation"""
+    print_test_header("VNPAY PAYMENT SYSTEM")
     results = []
+    payment_id = None
     
     if not tokens.get("patient") or not appointment_id:
         print("   ❌ Missing patient token or appointment ID for payment tests")
@@ -434,7 +435,7 @@ def test_payment_system():
     
     auth_headers = {**HEADERS, "Authorization": f"Bearer {tokens['patient']}"}
     
-    # Test POST /api/payments/create - create payment order
+    # Test POST /api/payments/create - create VNPay payment with QR code
     try:
         payment_data = {
             "appointment_id": appointment_id,
@@ -446,19 +447,66 @@ def test_payment_system():
                                json=payment_data, 
                                headers=auth_headers)
         
-        success = print_result("/payments/create", "POST", 
+        success = print_result("/payments/create (VNPay)", "POST", 
                              response.status_code, response.json())
         
         if success:
             data = response.json()
-            print(f"   ✅ Payment order created: {data.get('payment_id')}")
-            print(f"   ✅ Payment URL: {data.get('payment_url')}")
+            payment_id = data.get('payment_id')
+            qr_code = data.get('qr_code')
+            
+            print(f"   ✅ VNPay payment created: {payment_id}")
+            print(f"   ✅ Amount: {data.get('amount')} VND")
+            print(f"   ✅ Status: {data.get('status')}")
+            print(f"   ✅ Expires at: {data.get('expires_at')}")
+            
+            # Validate QR code format
+            expected_parts = [
+                "vnpay://payment",
+                "client_id=14fced4c-832c-4402-b4e1-c735fa52d9e2",
+                f"amount={payment_data['amount']}",
+                f"order_id={payment_id}",
+                "api_key=50f5164d-7384-4a05-a76a-c128c6c8769c",
+                f"appointment_id={appointment_id}"
+            ]
+            
+            qr_valid = all(part in qr_code for part in expected_parts)
+            
+            if qr_valid:
+                print(f"   ✅ QR code format is correct")
+                print(f"   📱 QR Code: {qr_code}")
+            else:
+                print(f"   ❌ QR code format is incorrect")
+                print(f"   Expected parts: {expected_parts}")
+                print(f"   Actual QR: {qr_code}")
+                success = False
             
         results.append(success)
         
     except Exception as e:
-        print(f"   ❌ Create payment error: {str(e)}")
+        print(f"   ❌ Create VNPay payment error: {str(e)}")
         results.append(False)
+    
+    # Test GET /api/payments/status/{payment_id} - check payment status
+    if payment_id:
+        try:
+            response = requests.get(f"{BASE_URL}/payments/status/{payment_id}", 
+                                   headers=auth_headers)
+            
+            success = print_result(f"/payments/status/{payment_id}", "GET", 
+                                 response.status_code, response.json())
+            
+            if success:
+                status_data = response.json()
+                print(f"   ✅ Payment status: {status_data.get('status')}")
+                print(f"   ✅ Amount: {status_data.get('amount')} VND")
+                print(f"   ✅ Gateway: {status_data.get('gateway')}")
+                
+            results.append(success)
+            
+        except Exception as e:
+            print(f"   ❌ Check payment status error: {str(e)}")
+            results.append(False)
     
     # Test POST /api/payments/confirm/{appointment_id} - confirm payment
     try:
@@ -470,6 +518,20 @@ def test_payment_system():
         
         if success:
             print("   ✅ Payment confirmed successfully")
+            
+            # Verify appointment status updated
+            apt_response = requests.get(f"{BASE_URL}/appointments/{appointment_id}", 
+                                      headers=auth_headers)
+            if apt_response.status_code == 200:
+                apt_data = apt_response.json()
+                if apt_data.get("payment_status") == "paid" and apt_data.get("status") == "confirmed":
+                    print("   ✅ Appointment status updated to paid/confirmed")
+                else:
+                    print(f"   ❌ Appointment status not updated correctly: payment_status={apt_data.get('payment_status')}, status={apt_data.get('status')}")
+                    success = False
+            else:
+                print("   ❌ Could not verify appointment status update")
+                success = False
             
         results.append(success)
         
