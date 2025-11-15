@@ -270,12 +270,14 @@ const styles = StyleSheet.create({
   },
   actionGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 16,
   },
   actionCard: {
     flex: 1,
+    minWidth: '28%',
     backgroundColor: '#FFFFFF',
-    padding: 24,
+    padding: 20,
     borderRadius: 12,
     alignItems: 'center',
     shadowColor: '#000',
