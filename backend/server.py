@@ -515,6 +515,10 @@ async def get_messages(appointment_id: str, current_user = Depends(get_current_u
 
 # ==================== PAYMENT ROUTES ====================
 
+# VNPay Configuration
+VNPAY_API_KEY = "50f5164d-7384-4a05-a76a-c128c6c8769c"
+VNPAY_CLIENT_ID = "14fced4c-832c-4402-b4e1-c735fa52d9e2"
+
 @api_router.post("/payments/create")
 async def create_payment(
     payment_data: PaymentRequest,
@@ -527,18 +531,57 @@ async def create_payment(
     if appointment["patient_id"] != current_user["_id"]:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # For now, mock payment (would integrate with actual gateways)
+    # Create payment record
     payment_id = str(uuid.uuid4())
     
-    # Simulate payment URL
-    payment_url = f"https://payment.gateway.vn/pay?order_id={payment_id}&amount={payment_data.amount}"
+    # Create QR code data for VNPay
+    # Format: vnpay://payment?client_id=xxx&amount=xxx&order_id=xxx&api_key=xxx
+    qr_data = f"vnpay://payment?client_id={VNPAY_CLIENT_ID}&amount={payment_data.amount}&order_id={payment_id}&api_key={VNPAY_API_KEY}&appointment_id={payment_data.appointment_id}"
+    
+    # Store payment record
+    payment_record = {
+        "_id": payment_id,
+        "appointment_id": payment_data.appointment_id,
+        "patient_id": current_user["_id"],
+        "amount": payment_data.amount,
+        "gateway": payment_data.gateway,
+        "status": "pending",
+        "qr_code": qr_data,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(minutes=15)
+    }
+    
+    await db.payments.insert_one(payment_record)
     
     return {
         "success": True,
         "payment_id": payment_id,
-        "payment_url": payment_url,
+        "qr_code": qr_data,
         "gateway": payment_data.gateway,
-        "amount": payment_data.amount
+        "amount": payment_data.amount,
+        "appointment_id": payment_data.appointment_id,
+        "status": "pending",
+        "expires_at": payment_record["expires_at"].isoformat()
+    }
+
+@api_router.get("/payments/status/{payment_id}")
+async def get_payment_status(payment_id: str, current_user = Depends(get_current_user)):
+    payment = await db.payments.find_one({"_id": payment_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Check if payment expired
+    if payment["expires_at"] < datetime.utcnow() and payment["status"] == "pending":
+        await db.payments.update_one(
+            {"_id": payment_id},
+            {"$set": {"status": "expired"}}
+        )
+        return {"status": "expired"}
+    
+    return {
+        "status": payment["status"],
+        "amount": payment["amount"],
+        "gateway": payment["gateway"]
     }
 
 @api_router.post("/payments/confirm/{appointment_id}")
@@ -547,6 +590,12 @@ async def confirm_payment(appointment_id: str, current_user = Depends(get_curren
     await db.appointments.update_one(
         {"_id": appointment_id},
         {"$set": {"payment_status": "paid", "status": "confirmed"}}
+    )
+    
+    # Update payment status
+    await db.payments.update_many(
+        {"appointment_id": appointment_id},
+        {"$set": {"status": "paid", "paid_at": datetime.utcnow()}}
     )
     
     return {"message": "Payment confirmed successfully"}
