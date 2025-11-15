@@ -1,0 +1,290 @@
+diff --git a/test_result.md b/test_result.md
+index 4dc214a..cb7d740 100644
+--- a/test_result.md
++++ b/test_result.md
+@@ -107,59 +107,71 @@ user_problem_statement: "Tạo ứng dụng đặt lịch khám bệnh cho phòn
+ backend:
+   - task: "User Authentication & Authorization"
+     implemented: true
+-    working: "NA"
++    working: true
+     file: "server.py"
+     stuck_count: 0
+     priority: "high"
+-    needs_retesting: true
++    needs_retesting: false
+     status_history:
+         - working: "NA"
+           agent: "main"
+           comment: "Implemented JWT-based auth with bcrypt password hashing. Supports 3 roles: patient, doctor, admin. Registration and login endpoints created."
++        - working: true
++          agent: "testing"
++          comment: "✅ TESTED: All authentication endpoints working correctly. Registration for all 3 roles (patient, doctor, admin) successful. Login with valid credentials works, invalid credentials properly rejected with 401. Protected endpoints require valid JWT tokens. GET /auth/me returns correct user information."
+ 
+   - task: "Doctor & Specialization Management"
+     implemented: true
+-    working: "NA"
++    working: true
+     file: "server.py"
+     stuck_count: 0
+     priority: "high"
+-    needs_retesting: true
++    needs_retesting: false
+     status_history:
+         - working: "NA"
+           agent: "main"
+           comment: "Created endpoints to list doctors, filter by specialization, and get specialization list. Returns 8 Vietnamese specializations."
++        - working: true
++          agent: "testing"
++          comment: "✅ TESTED: Doctor management endpoints working correctly. GET /doctors returns list of doctors. Filtering by specialization works properly. GET /specializations returns 8 Vietnamese specializations. Individual doctor lookup by ID works correctly."
+ 
+   - task: "Appointment Booking System"
+     implemented: true
+-    working: "NA"
++    working: true
+     file: "server.py"
+     stuck_count: 0
+     priority: "high"
+-    needs_retesting: true
++    needs_retesting: false
+     status_history:
+         - working: "NA"
+           agent: "main"
+           comment: "Full CRUD for appointments. Patients can create, view, update, cancel appointments. Doctor and admin can view their relevant appointments."
++        - working: true
++          agent: "testing"
++          comment: "✅ TESTED: Appointment booking system fully functional. Patients can create appointments with doctors. GET /appointments returns user-specific appointments based on role. PUT /appointments allows updates. DELETE /appointments cancels appointments. Role-based access control working correctly."
+ 
+   - task: "Chat System with Socket.IO"
+     implemented: true
+-    working: "NA"
++    working: true
+     file: "server.py"
+     stuck_count: 0
+     priority: "medium"
+-    needs_retesting: true
++    needs_retesting: false
+     status_history:
+         - working: "NA"
+           agent: "main"
+           comment: "Implemented Socket.IO for real-time chat. Messages stored in MongoDB. Room-based chat per appointment ID."
++        - working: true
++          agent: "testing"
++          comment: "✅ TESTED: Chat system working correctly. POST /messages successfully sends messages. GET /messages/{appointment_id} retrieves chat history. Role-based access control ensures only patients and doctors involved in appointment can access chat. Messages stored with proper metadata."
+ 
+   - task: "Payment Integration (VNPay/MoMo/ZaloPay)"
+     implemented: true
+-    working: "NA"
++    working: true
+     file: "server.py"
+     stuck_count: 0
+     priority: "high"
+-    needs_retesting: true
++    needs_retesting: false
+     status_history:
+         - working: "NA"
+           agent: "main"
+@@ -167,6 +179,9 @@ backend:
+         - working: "NA"
+           agent: "main"
+           comment: "Updated payment endpoints with VNPay integration. Added QR code generation with API key and Client ID. Added payment status tracking endpoint. Payment records now stored in database with expiration."
++        - working: true
++          agent: "testing"
++          comment: "✅ TESTED: VNPay payment integration fully functional. POST /payments/create generates correct QR code with format: vnpay://payment?client_id=14fced4c-832c-4402-b4e1-c735fa52d9e2&amount=X&order_id=Y&api_key=50f5164d-7384-4a05-a76a-c128c6c8769c&appointment_id=Z. GET /payments/status/{payment_id} returns payment status. POST /payments/confirm/{appointment_id} updates both payment and appointment status correctly. Tested with multiple amounts (100K-1M VND). Error handling for invalid IDs works properly. Payment expiration logic implemented."
+ 
+ frontend:
+   - task: "Welcome Screen & Navigation"
+diff --git a/vnpay_specific_test.py b/vnpay_specific_test.py
+new file mode 100644
+index 0000000..72f3f2c
+--- /dev/null
++++ b/vnpay_specific_test.py
+@@ -0,0 +1,187 @@
++#!/usr/bin/env python3
++"""
++VNPay Specific Testing - Additional edge cases and validation
++"""
++
++import requests
++import json
++import uuid
++from datetime import datetime, timedelta
++
++BASE_URL = "https://payment-scanner-5.preview.emergentagent.com/api"
++HEADERS = {"Content-Type": "application/json"}
++
++def test_vnpay_edge_cases():
++    """Test VNPay specific edge cases"""
++    print("🔍 VNPAY EDGE CASE TESTING")
++    print("=" * 50)
++    
++    # Register a test user
++    test_email = f"vnpay_test_{uuid.uuid4().hex[:8]}@test.com"
++    user_data = {
++        "email": test_email,
++        "password": "TestPass123!",
++        "full_name": "VNPay Test User",
++        "phone": "0901234567",
++        "role": "patient"
++    }
++    
++    # Register user
++    response = requests.post(f"{BASE_URL}/auth/register", json=user_data, headers=HEADERS)
++    if response.status_code != 200:
++        print("❌ Failed to register test user")
++        return False
++        
++    token = response.json().get("token")
++    auth_headers = {**HEADERS, "Authorization": f"Bearer {token}"}
++    
++    # Create doctor
++    doctor_data = {
++        "email": f"doctor_{uuid.uuid4().hex[:8]}@test.com",
++        "password": "DoctorPass123!",
++        "full_name": "Test Doctor",
++        "phone": "0987654321",
++        "role": "doctor",
++        "specialization": "Nội khoa"
++    }
++    
++    doc_response = requests.post(f"{BASE_URL}/auth/register", json=doctor_data, headers=HEADERS)
++    if doc_response.status_code != 200:
++        print("❌ Failed to register test doctor")
++        return False
++        
++    doctor_id = doc_response.json()["user"]["id"]
++    
++    # Create appointment
++    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
++    appointment_data = {
++        "doctor_id": doctor_id,
++        "appointment_date": tomorrow,
++        "appointment_time": "14:00",
++        "notes": "VNPay payment test"
++    }
++    
++    apt_response = requests.post(f"{BASE_URL}/appointments", json=appointment_data, headers=auth_headers)
++    if apt_response.status_code != 200:
++        print("❌ Failed to create test appointment")
++        return False
++        
++    appointment_id = apt_response.json()["id"]
++    
++    print(f"✅ Test setup complete - Appointment ID: {appointment_id}")
++    
++    # Test 1: Different payment amounts
++    print("\n🧪 Test 1: Different payment amounts")
++    amounts = [100000.0, 250000.0, 500000.0, 1000000.0]
++    
++    for amount in amounts:
++        payment_data = {
++            "appointment_id": appointment_id,
++            "amount": amount,
++            "gateway": "vnpay"
++        }
++        
++        response = requests.post(f"{BASE_URL}/payments/create", json=payment_data, headers=auth_headers)
++        if response.status_code == 200:
++            data = response.json()
++            qr_code = data.get("qr_code")
++            if f"amount={amount}" in qr_code:
++                print(f"✅ Amount {amount} VND - QR code correct")
++            else:
++                print(f"❌ Amount {amount} VND - QR code incorrect")
++        else:
++            print(f"❌ Amount {amount} VND - Payment creation failed")
++    
++    # Test 2: QR Code format validation
++    print("\n🧪 Test 2: QR Code format validation")
++    payment_data = {
++        "appointment_id": appointment_id,
++        "amount": 500000.0,
++        "gateway": "vnpay"
++    }
++    
++    response = requests.post(f"{BASE_URL}/payments/create", json=payment_data, headers=auth_headers)
++    if response.status_code == 200:
++        data = response.json()
++        qr_code = data.get("qr_code")
++        payment_id = data.get("payment_id")
++        
++        # Check all required components
++        required_components = {
++            "Protocol": "vnpay://payment",
++            "Client ID": "client_id=14fced4c-832c-4402-b4e1-c735fa52d9e2",
++            "API Key": "api_key=50f5164d-7384-4a05-a76a-c128c6c8769c",
++            "Amount": f"amount={payment_data['amount']}",
++            "Order ID": f"order_id={payment_id}",
++            "Appointment ID": f"appointment_id={appointment_id}"
++        }
++        
++        all_valid = True
++        for component_name, component_value in required_components.items():
++            if component_value in qr_code:
++                print(f"✅ {component_name}: Present")
++            else:
++                print(f"❌ {component_name}: Missing")
++                all_valid = False
++        
++        if all_valid:
++            print("✅ QR Code format is completely valid")
++        else:
++            print("❌ QR Code format has issues")
++            
++        print(f"📱 Full QR Code: {qr_code}")
++        
++        # Test 3: Payment status lifecycle
++        print("\n🧪 Test 3: Payment status lifecycle")
++        
++        # Check initial status
++        status_response = requests.get(f"{BASE_URL}/payments/status/{payment_id}", headers=auth_headers)
++        if status_response.status_code == 200:
++            status_data = status_response.json()
++            print(f"✅ Initial status: {status_data.get('status')}")
++        else:
++            print("❌ Failed to get initial payment status")
++        
++        # Confirm payment
++        confirm_response = requests.post(f"{BASE_URL}/payments/confirm/{appointment_id}", headers=auth_headers)
++        if confirm_response.status_code == 200:
++            print("✅ Payment confirmation successful")
++            
++            # Check updated status
++            status_response2 = requests.get(f"{BASE_URL}/payments/status/{payment_id}", headers=auth_headers)
++            if status_response2.status_code == 200:
++                status_data2 = status_response2.json()
++                print(f"✅ Updated status: {status_data2.get('status')}")
++            else:
++                print("❌ Failed to get updated payment status")
++        else:
++            print("❌ Payment confirmation failed")
++    
++    # Test 4: Invalid scenarios
++    print("\n🧪 Test 4: Invalid scenarios")
++    
++    # Test with invalid appointment ID
++    invalid_payment_data = {
++        "appointment_id": "invalid-appointment-id",
++        "amount": 500000.0,
++        "gateway": "vnpay"
++    }
++    
++    response = requests.post(f"{BASE_URL}/payments/create", json=invalid_payment_data, headers=auth_headers)
++    if response.status_code == 404:
++        print("✅ Invalid appointment ID properly rejected")
++    else:
++        print(f"❌ Invalid appointment ID not properly handled: {response.status_code}")
++    
++    # Test with invalid payment ID for status check
++    response = requests.get(f"{BASE_URL}/payments/status/invalid-payment-id", headers=auth_headers)
++    if response.status_code == 404:
++        print("✅ Invalid payment ID properly rejected")
++    else:
++        print(f"❌ Invalid payment ID not properly handled: {response.status_code}")
++    
++    print("\n✅ VNPay edge case testing completed")
++    return True
++
++if __name__ == "__main__":
++    test_vnpay_edge_cases()
+\ No newline at end of file
