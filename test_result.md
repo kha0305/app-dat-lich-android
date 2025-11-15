@@ -101,3 +101,182 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Tạo ứng dụng đặt lịch khám bệnh cho phòng khám của bác sĩ với các tính năng: đăng ký/đăng nhập (3 vai trò: bệnh nhân, bác sĩ, admin), xem danh sách bác sĩ và chuyên khoa, đặt lịch khám, xem lịch sử khám bệnh, hủy/đổi lịch hẹn, thông báo nhắc lịch, chat real-time với bác sĩ, và thanh toán online qua VNPay/MoMo/ZaloPay"
+
+backend:
+  - task: "User Authentication & Authorization"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented JWT-based auth with bcrypt password hashing. Supports 3 roles: patient, doctor, admin. Registration and login endpoints created."
+
+  - task: "Doctor & Specialization Management"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Created endpoints to list doctors, filter by specialization, and get specialization list. Returns 8 Vietnamese specializations."
+
+  - task: "Appointment Booking System"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Full CRUD for appointments. Patients can create, view, update, cancel appointments. Doctor and admin can view their relevant appointments."
+
+  - task: "Chat System with Socket.IO"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented Socket.IO for real-time chat. Messages stored in MongoDB. Room-based chat per appointment ID."
+
+  - task: "Payment Integration (VNPay/MoMo/ZaloPay)"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Mock payment endpoints created. Payment confirmation updates appointment status to paid/confirmed."
+
+frontend:
+  - task: "Welcome Screen & Navigation"
+    implemented: true
+    working: "NA"
+    file: "app/index.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Welcome screen with feature highlights. Navigation to login/register screens using expo-router."
+
+  - task: "Login & Registration"
+    implemented: true
+    working: "NA"
+    file: "app/login.tsx, app/register.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Login and registration forms with role selection. Form validation and error handling. Auto-redirect to role-specific dashboard after auth."
+
+  - task: "Patient Dashboard"
+    implemented: true
+    working: "NA"
+    file: "app/patient/dashboard.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Dashboard shows upcoming appointments, quick action buttons for booking and viewing appointments. Displays payment status warnings."
+
+  - task: "Appointment Booking Flow"
+    implemented: true
+    working: "NA"
+    file: "app/patient/book-appointment.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Multi-step booking: select specialization -> select doctor -> select date/time -> add notes. Time slot grid UI for easy selection."
+
+  - task: "Appointments List & Management"
+    implemented: true
+    working: "NA"
+    file: "app/patient/appointments.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "View all appointments with filter by status. Actions: pay, chat, cancel. Pull-to-refresh functionality."
+
+  - task: "Chat Screen"
+    implemented: true
+    working: "NA"
+    file: "app/patient/chat/[id].tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Real-time chat interface with message bubbles. Polling for new messages every 5 seconds. Keyboard-aware scrolling."
+
+  - task: "Doctor Dashboard"
+    implemented: true
+    working: "NA"
+    file: "app/doctor/dashboard.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Statistics cards showing appointment counts. List of today's appointments. Access to chat with patients."
+
+  - task: "Admin Dashboard"
+    implemented: true
+    working: "NA"
+    file: "app/admin/dashboard.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "System overview with statistics. Revenue tracking. Recent appointments list for monitoring."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "User Authentication & Authorization"
+    - "Appointment Booking System"
+    - "Doctor & Specialization Management"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "MVP complete with all core features implemented. Ready for backend testing. Authentication, appointment booking, doctor management, chat, and payment (mock) endpoints are ready. Please test authentication flow first, then appointment booking, then other features."
