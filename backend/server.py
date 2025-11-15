@@ -400,6 +400,58 @@ async def cancel_appointment(appointment_id: str, current_user = Depends(get_cur
 
 # ==================== CHAT ROUTES ====================
 
+@api_router.get("/chats")
+async def get_chats(current_user = Depends(get_current_user)):
+    """Get list of conversations (appointments with messages) for the user"""
+    # Get appointments based on user role
+    if current_user["role"] == "patient":
+        query = {"patient_id": current_user["_id"]}
+    elif current_user["role"] == "doctor":
+        query = {"doctor_id": current_user["_id"]}
+    else:  # admin
+        query = {}
+    
+    # Get appointments that have at least one message or are confirmed/completed
+    appointments = await db.appointments.find(query).sort("created_at", -1).to_list(100)
+    
+    chats = []
+    for apt in appointments:
+        # Get last message for this appointment
+        last_message = await db.messages.find_one(
+            {"appointment_id": apt["_id"]},
+            sort=[("timestamp", -1)]
+        )
+        
+        # Get unread message count
+        unread_count = 0
+        if last_message:
+            unread_count = await db.messages.count_documents({
+                "appointment_id": apt["_id"],
+                "sender_id": {"$ne": current_user["_id"]},
+                "read": {"$ne": True}
+            })
+        
+        # Only include appointments that have messages or are confirmed
+        if last_message or apt["status"] in ["confirmed", "completed"]:
+            chats.append({
+                "id": apt["_id"],
+                "appointment_id": apt["_id"],
+                "patient_name": apt["patient_name"],
+                "doctor_name": apt["doctor_name"],
+                "specialization": apt["specialization"],
+                "appointment_date": apt["appointment_date"],
+                "appointment_time": apt["appointment_time"],
+                "status": apt["status"],
+                "last_message": {
+                    "message": last_message["message"] if last_message else None,
+                    "timestamp": last_message["timestamp"].isoformat() if last_message else None,
+                    "sender_name": last_message["sender_name"] if last_message else None
+                } if last_message else None,
+                "unread_count": unread_count
+            })
+    
+    return chats
+
 @api_router.post("/messages")
 async def send_message(
     message_data: MessageCreate,
@@ -418,13 +470,21 @@ async def send_message(
         "sender_name": current_user["full_name"],
         "sender_role": current_user["role"],
         "message": message_data.message,
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.utcnow(),
+        "read": False
     }
     
     await db.messages.insert_one(message)
     
     # Emit to socket
-    await sio.emit('new_message', message, room=message_data.appointment_id)
+    await sio.emit('new_message', {
+        "id": message_id,
+        "appointment_id": message_data.appointment_id,
+        "sender_name": current_user["full_name"],
+        "sender_role": current_user["role"],
+        "message": message_data.message,
+        "timestamp": message["timestamp"].isoformat()
+    }, room=message_data.appointment_id)
     
     return message
 
