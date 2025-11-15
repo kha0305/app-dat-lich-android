@@ -295,3 +295,5 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: "MVP complete with all core features implemented. Ready for backend testing. Authentication, appointment booking, doctor management, chat, and payment (mock) endpoints are ready. Please test authentication flow first, then appointment booking, then other features."
+    - agent: "main"
+      message: "Fixed app startup issues - services were stopped. Installed missing dependencies (python-socketio, react-native-qrcode-svg). Added VNPay payment integration with QR code display. Created new payment screen showing QR code with VNPay API credentials. Payment flow now: Select VNPay -> Navigate to payment screen -> Show QR code -> User scans and pays -> Confirm payment. Backend and frontend services are now running successfully."
