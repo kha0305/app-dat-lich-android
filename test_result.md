@@ -181,7 +181,7 @@ backend:
           comment: "Updated payment endpoints with VNPay integration. Added QR code generation with API key and Client ID. Added payment status tracking endpoint. Payment records now stored in database with expiration."
         - working: true
           agent: "testing"
-          comment: "✅ TESTED: VNPay payment integration fully functional. POST /payments/create generates correct QR code with format: vnpay://payment?client_id=14fced4c-832c-4402-b4e1-c735fa52d9e2&amount=X&order_id=Y&api_key=50f5164d-7384-4a05-a76a-c128c6c8769c&appointment_id=Z. GET /payments/status/{payment_id} returns payment status. POST /payments/confirm/{appointment_id} updates both payment and appointment status correctly. Tested with multiple amounts (100K-1M VND). Error handling for invalid IDs works properly. Payment expiration logic implemented."
+          comment: "✅ TESTED: VNPay payment integration fully functional. POST /payments/create generates correct QR code with format: vnpay://payment?client_id=ra-builder&amount=X&order_id=Y&api_key=ra-builder&appointment_id=Z. GET /payments/status/{payment_id} returns payment status. POST /payments/confirm/{appointment_id} updates both payment and appointment status correctly. Tested with multiple amounts (100K-1M VND). Error handling for invalid IDs works properly. Payment expiration logic implemented."
 
 frontend:
   - task: "Welcome Screen & Navigation"

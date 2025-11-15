@@ -8,7 +8,7 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-BASE_URL = "https://payment-scanner-5.preview.emergentagent.com/api"
+BASE_URL = "https://ra-builder.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 def test_vnpay_edge_cases():
@@ -109,8 +109,8 @@ def test_vnpay_edge_cases():
         # Check all required components
         required_components = {
             "Protocol": "vnpay://payment",
-            "Client ID": "client_id=14fced4c-832c-4402-b4e1-c735fa52d9e2",
-            "API Key": "api_key=50f5164d-7384-4a05-a76a-c128c6c8769c",
+            "Client ID": "client_id=ra-builder",
+            "API Key": "api_key=ra-builder",
             "Amount": f"amount={payment_data['amount']}",
             "Order ID": f"order_id={payment_id}",
             "Appointment ID": f"appointment_id={appointment_id}"

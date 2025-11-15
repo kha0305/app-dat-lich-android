@@ -10,7 +10,7 @@ import time
 from datetime import datetime, timedelta
 
 # Configuration
-BASE_URL = "https://payment-scanner-5.preview.emergentagent.com/api"
+BASE_URL = "https://ra-builder.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 # Test data
@@ -463,10 +463,10 @@ def test_payment_system():
             # Validate QR code format
             expected_parts = [
                 "vnpay://payment",
-                "client_id=14fced4c-832c-4402-b4e1-c735fa52d9e2",
+                "client_id=ra-builder",
                 f"amount={payment_data['amount']}",
                 f"order_id={payment_id}",
-                "api_key=50f5164d-7384-4a05-a76a-c128c6c8769c",
+                "api_key=ra-builder",
                 f"appointment_id={appointment_id}"
             ]
             
