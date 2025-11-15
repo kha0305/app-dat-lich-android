@@ -93,33 +93,29 @@ export default function AppointmentsScreen() {
         { text: 'Hủy', style: 'cancel' },
         {
           text: 'VNPay',
-          onPress: () => processPayment(appointment.id, 'vnpay'),
+          onPress: () => navigateToPayment(appointment.id, appointment.amount, 'vnpay'),
         },
         {
           text: 'MoMo',
-          onPress: () => processPayment(appointment.id, 'momo'),
+          onPress: () => navigateToPayment(appointment.id, appointment.amount, 'momo'),
         },
         {
           text: 'ZaloPay',
-          onPress: () => processPayment(appointment.id, 'zalopay'),
+          onPress: () => navigateToPayment(appointment.id, appointment.amount, 'zalopay'),
         },
       ]
     );
   };
 
-  const processPayment = async (appointmentId: string, gateway: string) => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      await axios.post(
-        `${API_URL}/api/payments/confirm/${appointmentId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      Alert.alert('Thành công', 'Thanh toán thành công!');
-      loadAppointments();
-    } catch (error) {
-      Alert.alert('Lỗi', 'Thanh toán thất bại');
-    }
+  const navigateToPayment = (appointmentId: string, amount: number, gateway: string) => {
+    router.push({
+      pathname: '/patient/payment',
+      params: {
+        appointmentId,
+        amount: amount.toString(),
+        gateway,
+      },
+    });
   };
 
   const getStatusColor = (status: string) => {
