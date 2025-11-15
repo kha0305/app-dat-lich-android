@@ -158,12 +158,15 @@ backend:
     working: "NA"
     file: "server.py"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Mock payment endpoints created. Payment confirmation updates appointment status to paid/confirmed."
+        - working: "NA"
+          agent: "main"
+          comment: "Updated payment endpoints with VNPay integration. Added QR code generation with API key and Client ID. Added payment status tracking endpoint. Payment records now stored in database with expiration."
 
 frontend:
   - task: "Welcome Screen & Navigation"
