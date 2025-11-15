@@ -265,6 +265,18 @@ frontend:
           agent: "main"
           comment: "System overview with statistics. Revenue tracking. Recent appointments list for monitoring."
 
+  - task: "Payment Screen with QR Code"
+    implemented: true
+    working: "NA"
+    file: "app/patient/payment.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Created new payment screen that displays QR code for VNPay payment. Shows payment amount, QR code, transaction ID, countdown timer, and step-by-step instructions. Includes payment status checking and manual confirmation buttons. Installed react-native-qrcode-svg for QR generation."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
