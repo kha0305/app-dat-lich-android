@@ -148,7 +148,7 @@ export default function PatientDashboard() {
               style={styles.actionCard}
               onPress={() => router.push('/patient/book-appointment')}
             >
-              <Ionicons name="add-circle" size={40} color="#4A90E2" />
+              <Ionicons name="add-circle" size={40} color="#00BFA5" />
               <Text style={styles.actionText}>Đặt lịch</Text>
             </TouchableOpacity>
 
@@ -156,8 +156,16 @@ export default function PatientDashboard() {
               style={styles.actionCard}
               onPress={() => router.push('/patient/appointments')}
             >
-              <Ionicons name="calendar" size={40} color="#27AE60" />
+              <Ionicons name="calendar" size={40} color="#4CAF50" />
               <Text style={styles.actionText}>Lịch hẹn</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => router.push('/patient/chats')}
+            >
+              <Ionicons name="chatbubbles" size={40} color="#2196F3" />
+              <Text style={styles.actionText}>Tin nhắn</Text>
             </TouchableOpacity>
           </View>
         </View>
