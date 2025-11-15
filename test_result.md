@@ -107,59 +107,71 @@ user_problem_statement: "Tạo ứng dụng đặt lịch khám bệnh cho phòn
 backend:
   - task: "User Authentication & Authorization"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented JWT-based auth with bcrypt password hashing. Supports 3 roles: patient, doctor, admin. Registration and login endpoints created."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: All authentication endpoints working correctly. Registration for all 3 roles (patient, doctor, admin) successful. Login with valid credentials works, invalid credentials properly rejected with 401. Protected endpoints require valid JWT tokens. GET /auth/me returns correct user information."
 
   - task: "Doctor & Specialization Management"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Created endpoints to list doctors, filter by specialization, and get specialization list. Returns 8 Vietnamese specializations."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Doctor management endpoints working correctly. GET /doctors returns list of doctors. Filtering by specialization works properly. GET /specializations returns 8 Vietnamese specializations. Individual doctor lookup by ID works correctly."
 
   - task: "Appointment Booking System"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Full CRUD for appointments. Patients can create, view, update, cancel appointments. Doctor and admin can view their relevant appointments."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Appointment booking system fully functional. Patients can create appointments with doctors. GET /appointments returns user-specific appointments based on role. PUT /appointments allows updates. DELETE /appointments cancels appointments. Role-based access control working correctly."
 
   - task: "Chat System with Socket.IO"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implemented Socket.IO for real-time chat. Messages stored in MongoDB. Room-based chat per appointment ID."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Chat system working correctly. POST /messages successfully sends messages. GET /messages/{appointment_id} retrieves chat history. Role-based access control ensures only patients and doctors involved in appointment can access chat. Messages stored with proper metadata."
 
   - task: "Payment Integration (VNPay/MoMo/ZaloPay)"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
@@ -167,6 +179,9 @@ backend:
         - working: "NA"
           agent: "main"
           comment: "Updated payment endpoints with VNPay integration. Added QR code generation with API key and Client ID. Added payment status tracking endpoint. Payment records now stored in database with expiration."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: VNPay payment integration fully functional. POST /payments/create generates correct QR code with format: vnpay://payment?client_id=14fced4c-832c-4402-b4e1-c735fa52d9e2&amount=X&order_id=Y&api_key=50f5164d-7384-4a05-a76a-c128c6c8769c&appointment_id=Z. GET /payments/status/{payment_id} returns payment status. POST /payments/confirm/{appointment_id} updates both payment and appointment status correctly. Tested with multiple amounts (100K-1M VND). Error handling for invalid IDs works properly. Payment expiration logic implemented."
 
 frontend:
   - task: "Welcome Screen & Navigation"
