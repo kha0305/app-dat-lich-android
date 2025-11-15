@@ -285,9 +285,10 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Payment Integration (VNPay/MoMo/ZaloPay)"
+    - "Payment Screen with QR Code"
     - "User Authentication & Authorization"
     - "Appointment Booking System"
-    - "Doctor & Specialization Management"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
